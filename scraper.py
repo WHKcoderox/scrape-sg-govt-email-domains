@@ -80,17 +80,11 @@ def scrape_govt_email_domains(url='https://www.sgdi.gov.sg/search-results?term=.
         print(f"Loading initial page: {url}")
         driver.get(url)
         
-        # Wait for the page to load and the search results to appear
-        wait = WebDriverWait(driver, 10)
+        # CSS selector for SearchResult elements
+        CSS_SELECTOR = "*[id*='SearchResult']"
         
-        # Wait for page initialization - looking for body or main content
-        try:
-            wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-        except TimeoutException:
-            print("Warning: Page body did not load within timeout")
-        
-        # Additional wait for dynamic content to initialize
-        time.sleep(3)
+        # Maximum time to wait (in seconds)
+        WAIT_TIME_SECONDS = 15
         
         iteration = 1
         consecutive_no_new_data = 0
@@ -104,12 +98,13 @@ def scrape_govt_email_domains(url='https://www.sgdi.gov.sg/search-results?term=.
                 print(f"  Calling LoadData({iteration})...")
                 driver.execute_script(f"LoadData({iteration});")
                 
-                # Wait for new content to load - use explicit wait where possible
-                try:
-                    # Give time for AJAX/dynamic content to update
-                    time.sleep(2)
-                except Exception:
-                    pass
+                # Initialize the WebDriverWait object
+                wait = WebDriverWait(driver, WAIT_TIME_SECONDS)
+                
+                # Wait until the element matching the CSS selector is VISIBLE on the page
+                element = wait.until(
+                    EC.visibility_of_element_located((By.CSS_SELECTOR, CSS_SELECTOR))
+                )
                 
                 # Get the page source and look for elements with ID containing SearchResult
                 page_source = driver.page_source
