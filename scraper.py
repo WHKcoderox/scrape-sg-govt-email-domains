@@ -86,6 +86,9 @@ def scrape_govt_email_domains(url='https://www.sgdi.gov.sg/search-results?term=.
         # Maximum time to wait (in seconds)
         WAIT_TIME_SECONDS = 15
         
+        # Initialize the WebDriverWait object once
+        wait = WebDriverWait(driver, WAIT_TIME_SECONDS)
+        
         iteration = 1
         consecutive_no_new_data = 0
         max_no_new_data = 3  # Stop if no new data for 3 consecutive iterations
@@ -98,11 +101,8 @@ def scrape_govt_email_domains(url='https://www.sgdi.gov.sg/search-results?term=.
                 print(f"  Calling LoadData({iteration})...")
                 driver.execute_script(f"LoadData({iteration});")
                 
-                # Initialize the WebDriverWait object
-                wait = WebDriverWait(driver, WAIT_TIME_SECONDS)
-                
                 # Wait until the element matching the CSS selector is VISIBLE on the page
-                element = wait.until(
+                wait.until(
                     EC.visibility_of_element_located((By.CSS_SELECTOR, CSS_SELECTOR))
                 )
                 
