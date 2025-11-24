@@ -28,8 +28,15 @@ def setup_driver():
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
     
-    driver = webdriver.Chrome(options=options)
-    return driver
+    try:
+        driver = webdriver.Chrome(options=options)
+        return driver
+    except Exception as e:
+        raise RuntimeError(
+            "Failed to initialize Chrome WebDriver. "
+            "Please ensure Chrome/Chromium and ChromeDriver are installed and in your PATH. "
+            f"Error: {e}"
+        )
 
 
 def extract_email_domains(html_content):
@@ -45,7 +52,7 @@ def extract_email_domains(html_content):
     soup = BeautifulSoup(html_content, 'lxml')
     
     # Pattern to match email addresses with .gov.sg domain
-    email_pattern = r'@[\w\-\.]+\.gov\.sg'
+    email_pattern = r'@[\w\.\-]+\.gov\.sg'
     
     # Extract all text and find email domains
     text = soup.get_text()
@@ -76,9 +83,14 @@ def scrape_govt_email_domains(url='https://www.sgdi.gov.sg/search-results?term=.
         # Wait for the page to load and the search results to appear
         wait = WebDriverWait(driver, 10)
         
-        # Try to find an element that contains "SearchResult" in its ID
-        # This might be a container div
-        time.sleep(3)  # Give page time to initialize
+        # Wait for page initialization - looking for body or main content
+        try:
+            wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        except TimeoutException:
+            print("Warning: Page body did not load within timeout")
+        
+        # Additional wait for dynamic content to initialize
+        time.sleep(3)
         
         iteration = 1
         consecutive_no_new_data = 0
@@ -92,8 +104,12 @@ def scrape_govt_email_domains(url='https://www.sgdi.gov.sg/search-results?term=.
                 print(f"  Calling LoadData({iteration})...")
                 driver.execute_script(f"LoadData({iteration});")
                 
-                # Wait for new content to load
-                time.sleep(2)
+                # Wait for new content to load - use explicit wait where possible
+                try:
+                    # Give time for AJAX/dynamic content to update
+                    time.sleep(2)
+                except Exception:
+                    pass
                 
                 # Get the page source and look for elements with ID containing SearchResult
                 page_source = driver.page_source
@@ -102,15 +118,21 @@ def scrape_govt_email_domains(url='https://www.sgdi.gov.sg/search-results?term=.
                 # Find elements with ID containing "SearchResult" or similar
                 search_result_elements = soup.find_all(id=re.compile(r'SearchResult', re.IGNORECASE))
                 
+                # If no specific SearchResult elements found, look for common result containers
                 if not search_result_elements:
-                    # Try to find any content that might contain results
-                    search_result_elements = [soup]
+                    # Try alternative selectors for search results
+                    search_result_elements = soup.find_all(class_=re.compile(r'result|search', re.IGNORECASE))
                 
                 # Extract domains from the search results
                 iteration_domains = set()
-                for element in search_result_elements:
-                    domains = extract_email_domains(str(element))
-                    iteration_domains.update(domains)
+                if search_result_elements:
+                    for element in search_result_elements:
+                        domains = extract_email_domains(str(element))
+                        iteration_domains.update(domains)
+                else:
+                    # Last resort: parse entire page but this may include irrelevant domains
+                    print("  Warning: No specific search result elements found, parsing entire page")
+                    iteration_domains = extract_email_domains(page_source)
                 
                 # Check for new domains
                 new_domains = iteration_domains - all_domains
