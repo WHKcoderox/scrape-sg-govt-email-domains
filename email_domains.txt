@@ -72,7 +72,6 @@
 @nea.gov.sg
 @nhb.gov.sg
 @nlb.gov.sg
-@nparks..gov.sg
 @nparks.gov.sg
 @nprks.gov.sg
 @nrf.gov.sg
@@ -95,7 +94,6 @@
 @schools.gov.sg
 @seab.gov.sg
 @sentosa.gov.sg
-@sentosa.gov.sg.gov.sg
 @sfa.gov.sg
 @singstat.gov.sg
 @sla.gov.sg
