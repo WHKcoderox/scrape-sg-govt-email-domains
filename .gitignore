@@ -36,6 +36,9 @@ env/
 *.csv
 *.txt
 !requirements.txt
+# Email domains
+!email_domains.json
+!email_domains.txt
 
 # Selenium
 geckodriver.log
