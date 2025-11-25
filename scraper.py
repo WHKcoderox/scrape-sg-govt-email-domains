@@ -53,7 +53,7 @@ def extract_email_domains(html_content):
     soup = BeautifulSoup(html_content, "lxml")
 
     # Pattern to match email addresses with .gov.sg domain
-    email_pattern = r"@[\w\.\-]+\.gov\.sg"
+    email_pattern = r"@(?:[\w\-]+\.){0,2}gov\.sg"
 
     # Extract all text and find email domains
     text = soup.get_text()
@@ -64,7 +64,7 @@ def extract_email_domains(html_content):
 
 
 def scrape_govt_email_domains(
-    url="https://www.sgdi.gov.sg/search-results?term=.gov.sg", max_iterations=10_000
+    url="https://www.sgdi.gov.sg/search-results?term=.gov.sg", max_iterations=5_000
 ):
     """
     Scrape Singapore government email domains from the SGDI website.
