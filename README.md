@@ -58,8 +58,8 @@ The scraper uses:
 - **Regular Expressions**: To identify and extract `@*.gov.sg` email domains
 
 The infinite loop automatically terminates when:
-- No new domains are found for 3 consecutive iterations
-- The maximum iteration limit is reached (default: 1000)
+- No new domains are found for 1000 consecutive iterations
+- The maximum iteration limit is reached (default: 5000)
 - A JavaScript error occurs (e.g., `LoadData` function not available)
 
 ## Customization
